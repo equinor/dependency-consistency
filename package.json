@@ -1,0 +1,19 @@
+{
+    "name": "dependency-consistency",
+    "version": "0.0.1",
+    "description": "A simple script to ensure that dependencies described in web, and the pre-commit hooks are consistent",
+    "license": "MIT",
+    "author": "Sindre Nistad",
+    "bin": {
+        "dependency-consistency": "ts-node index.ts"
+    },
+    "dependencies": {
+        "@types/node": "^14.17.0",
+        "@types/yarnpkg__lockfile": "^1.1.4",
+        "@yarnpkg/lockfile": "^1.1.0",
+        "semver-sort": "^1.0.0",
+        "ts-node": "^9.1.1",
+        "typescript": "^4.3.2",
+        "yaml": "^1.10.2"
+    }
+}
