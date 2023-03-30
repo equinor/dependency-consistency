@@ -10,5 +10,6 @@ Helps keep the dependencies defined in your pre-commit hooks for eslint consiste
     rev: v1.0.0
     hooks:
       - id: consistent-eslint-dependencies
-        args: <path to lock file>
+        args:
+            - <path to lock file>
 ```
