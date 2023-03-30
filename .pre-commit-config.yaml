@@ -1,0 +1,12 @@
+---
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+    - repo: local
+      hooks:
+          - id: compile-typescript
+            name: Compile TypeScript
+            language: node
+            entry: npm run build
+            always_run: true
+            pass_filenames: false
