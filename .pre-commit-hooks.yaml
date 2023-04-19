@@ -4,6 +4,10 @@
     language: node
     entry: dependency-consistency
     pass_filenames: false
+    additional_dependencies:
+        - "@yarnpkg/lockfile@1.1.0"
+        - "semver-sort@1.0.0"
+        - "yaml@1.10.2"
     stages:
         - commit
         - manual
