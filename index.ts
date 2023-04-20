@@ -19,7 +19,7 @@ const LOCK_FILE = process.argv[2]
 const readFile = (path: string): string => fs.readFileSync(path, "utf8")
 
 const parseVersion = (dependency: string): Dependency => {
-    const {name, version } = /^(?<name>@?[a-z-/]+)(@(?<version>\d+\.\d+\.\d+))?$/.exec(dependency)?.groups || {name: "", version: null};
+    const {name, version } = /^(?<name>@?[a-z-/0-9]+)(@(?<version>\d+\.\d+\.\d+))?$/.exec(dependency)?.groups || {name: "", version: null};
     return {
         name,
         version: version || null,
