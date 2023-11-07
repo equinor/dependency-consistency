@@ -12,4 +12,4 @@ function get_root_dir () {
 
 readonly ROOT_DIR="$(get_root_dir)"
 
-node "$ROOT_DIR/index.js" "$@"
+node "$ROOT_DIR/index.cjs" "$@"
