@@ -14,7 +14,7 @@
         "yaml": "^1.10.2"
     },
     "devDependencies": {
-        "@types/node": "^18.15.11",
+        "@types/node": "^18.16.16",
         "@types/semver-sort": "^0.0.2",
         "@types/yaml": "^1.9.7",
         "@types/yarnpkg__lockfile": "^1.1.6",
