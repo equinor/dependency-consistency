@@ -8,9 +8,6 @@
     "bin": {
         "dependency-consistency": "./run.sh"
     },
-    "scripts": {
-        "build": "tsc"
-    },
     "dependencies": {
         "@yarnpkg/lockfile": "^1.1.0",
         "semver-sort": "^1.0.0",
