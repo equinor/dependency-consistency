@@ -46,7 +46,7 @@ function parseYarnLockFile(file: string): Record<string, string[]> {
 
 function parseYarn3LockFile(file: string): Record<string, string[]> {
     const dependencies = YAML.parse(readFile(file))
-    if (![6].includes(dependencies.__metadata.version)) {
+    if (![6, 8].includes(dependencies.__metadata.version)) {
         throw new Error("Unsupported format")
     }
     delete dependencies.__metadata

@@ -61,7 +61,7 @@ function parseYarnLockFile(file) {
 }
 function parseYarn3LockFile(file) {
     const dependencies = YAML.parse(readFile(file));
-    if (![6].includes(dependencies.__metadata.version)) {
+    if (![6, 8].includes(dependencies.__metadata.version)) {
         throw new Error("Unsupported format");
     }
     delete dependencies.__metadata;
