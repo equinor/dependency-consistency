@@ -3,12 +3,7 @@ const path = require("node:path")
 const lockfile = require("@yarnpkg/lockfile")
 const YAML = require("yaml")
 const semverSort = require("semver-sort")
-
-/**
- * @typedef Dependency
- * @property {string} name
- * @property {string | null} version
-*/
+const { readFile, parseVersion } = require("./shared.cjs")
 
 if (process.argv.length < 3) {
     throw new Error("Lock file as argument is required")
@@ -16,25 +11,6 @@ if (process.argv.length < 3) {
 
 const PRE_COMMIT_YAML = ".pre-commit-config.yaml"
 const LOCK_FILE = process.argv[2]
-
-/**
- * @function
- * @param {string} path
- * @returns {string}
- */
-const readFile = (path) => fs.readFileSync(path, "utf8")
-
-/**
- * @param {string} dependency
- * @returns {Dependency}
- */
-function parseVersion (dependency) {
-    const {name, version } = /^(?<name>@?[a-z-/0-9]+)(@(?<version>\d+\.\d+\.\d+))?$/.exec(dependency)?.groups || {name: "", version: null};
-    return {
-        name,
-        version: version || null,
-    }
-}
 
 /**
  * @param {string} file
@@ -120,19 +96,20 @@ function parsePackageLockFile(file) {
 }
 
 /**
+ * @param {string} lockFile The source file of installed / used dependencies
  * @returns {Record<string, string[]>}
  */
-function getDependencies(){
+function getDependencies(lockFile){
     const get = () => {
-        switch (path.basename(LOCK_FILE)) {
+        switch (path.basename(lockFile)) {
             case "yarn.lock":
                 try {
-                    return parseYarnLockFile(LOCK_FILE)
+                    return parseYarnLockFile(lockFile)
                 } catch (e) {
-                    return parseYarn3LockFile(LOCK_FILE)
+                    return parseYarn3LockFile(lockFile)
                 }
             case "package-lock.json":
-                return parsePackageLockFile(LOCK_FILE)
+                return parsePackageLockFile(lockFile)
             default:
                 throw new Error("Unsupported file")
         }
@@ -144,7 +121,7 @@ function getDependencies(){
     return dependencies
 }
 
-const dependencies = getDependencies()
+const dependencies = getDependencies(LOCK_FILE)
 
 /**
  * @returns {void}
