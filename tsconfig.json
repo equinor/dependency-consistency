@@ -2,6 +2,7 @@
     "files": [
         "index.cjs",
         "scripts/keep-own-dependencies-up-to-date.cjs",
+        "eslint.config.cjs",
     ],
     "compilerOptions": {
         "target": "ESNext",

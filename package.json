@@ -14,10 +14,20 @@
         "yaml": "^1.10.2"
     },
     "devDependencies": {
+        "@eslint/eslintrc": "^3.0.2",
+        "@eslint/js": "^9.0.0",
+        "@types/eslint__eslintrc": "^2.1.1",
+        "@types/eslint__js": "^8.42.3",
         "@types/node": "^18.16.16",
         "@types/semver-sort": "^0.0.2",
         "@types/yaml": "^1.9.7",
         "@types/yarnpkg__lockfile": "^1.1.6",
-        "typescript": "^4.3.2"
+        "@typescript-eslint/eslint-plugin": "^7.5.0",
+        "@typescript-eslint/parser": "^7.5.0",
+        "eslint": "^8.57.0",
+        "eslint-config-xo-typescript": "^4.0.0",
+        "globals": "^15.0.0",
+        "typescript": "^5.4.4",
+        "typescript-eslint": "^7.5.0"
     }
 }
