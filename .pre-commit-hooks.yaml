@@ -1,15 +1,16 @@
--   id: consistent-eslint-dependencies
-    name: Keep ESLint dependencies consistent in hooks
-    description: Ensure that the ESLint dependencies in the pre-commit hooks are consistent with the one used elsewhere in the repository
-    language: node
-    entry: dependency-consistency
-    pass_filenames: false
-    additional_dependencies:
-        - "@yarnpkg/lockfile@1.1.0"
-        - "semver-sort@1.0.0"
-        - "yaml@1.10.2"
-    stages:
-        - commit
-        - manual
-        - push
-    files: ^(.pre-commit-config.yaml|.*/(yarn.lock|package-lock.json))$
+- id: consistent-eslint-dependencies
+  name: Keep ESLint dependencies consistent in hooks
+  description: Ensure that the ESLint dependencies in the pre-commit hooks are
+    consistent with the one used elsewhere in the repository
+  language: node
+  entry: dependency-consistency
+  pass_filenames: false
+  additional_dependencies:
+    - "@yarnpkg/lockfile@1.1.0"
+    - semver-sort@1.0.0
+    - yaml@1.10.2
+  stages:
+    - commit
+    - manual
+    - push
+  files: ^(.pre-commit-config.yaml|.*/(yarn.lock|package-lock.json))$

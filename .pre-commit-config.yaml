@@ -10,3 +10,10 @@ repos:
             entry: npm exec tsc
             always_run: true
             pass_filenames: false
+
+          - id: keep-dependencies-consistent
+            name: Keep secified dependencies consistent
+            language: node
+            entry: node scripts/keep-own-dependencies-up-to-date.cjs
+            pass_filenames: false
+            files: ^(.pre-commit-hooks.yaml|package-lock.json)$
