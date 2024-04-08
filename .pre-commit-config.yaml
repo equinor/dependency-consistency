@@ -12,8 +12,41 @@ repos:
             pass_filenames: false
 
           - id: keep-dependencies-consistent
-            name: Keep secified dependencies consistent
+            name: Keep specified dependencies consistent
             language: node
             entry: node scripts/keep-own-dependencies-up-to-date.cjs
             pass_filenames: false
             files: ^(.pre-commit-hooks.yaml|package-lock.json)$
+
+          - id: consistent-dependencies
+            name: Keep these dependencies consistent
+            language: node
+            entry: node index.cjs
+            pass_filenames: false
+            files: ^(.pre-commit-config.yaml|package-lock.json)$
+            args:
+              - package-lock.json
+
+    -   repo: https://github.com/pre-commit/pre-commit-hooks
+        rev: 'v4.6.0'
+        hooks:
+          - id: check-json
+            exclude: tsconfig.json  # Uses JSON5
+          - id: check-yaml
+
+    -   repo: https://github.com/pre-commit/mirrors-eslint
+        rev: 'v8.56.0'
+        hooks:
+          - id: eslint
+            name: 'ESLint'
+            additional_dependencies:
+              - '@eslint/eslintrc@3.0.2'
+              - '@eslint/js@9.0.0'
+              - '@typescript-eslint/eslint-plugin@7.5.0'
+              - eslint-config-xo-typescript@4.0.0
+              - eslint@8.57.0
+              - globals@15.0.0
+              - typescript-eslint@7.5.0
+              - yaml@1.10.2
+            args:
+              - --fix
