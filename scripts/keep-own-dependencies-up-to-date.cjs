@@ -25,7 +25,7 @@ hooks.forEach(hook => {
             updatedDependecies.push(dependency)
         }
     })
-    hook = updatedDependecies
+    hook.additional_dependencies = updatedDependecies
 })
 
 fs.writeFileSync(".pre-commit-hooks.yaml", YAML.stringify(hooks, {
