@@ -1,5 +1,8 @@
 {
-    "files": ["index.cjs"],
+    "files": [
+        "index.cjs",
+        "scripts/keep-own-dependencies-up-to-date.cjs",
+    ],
     "compilerOptions": {
         "target": "ESNext",
         "module": "CommonJS",
@@ -13,6 +16,7 @@
         "strict": true,
         "esModuleInterop": true,
         "skipLibCheck": true,
+        "resolveJsonModule": true,
         "forceConsistentCasingInFileNames": true
     }
 }
