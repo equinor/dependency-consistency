@@ -170,7 +170,7 @@ function updateDependencies() {
         let content = readFile(PRE_COMMIT_YAML)
         Object.keys(mapping).forEach((previousVersion) => {
             const newVersion = mapping[previousVersion]
-            content = content.replace(new RegExp(`\n( +- *"?)${previousVersion}("? *#.*)?\n`, "gi"), "\n$1" + newVersion + "$2\n")
+            content = content.replace(new RegExp(`( +- *["']?)${previousVersion}(["']? *#.*)?`, "gi"), "$1" + newVersion + "$2")
         })
         fs.writeFileSync(PRE_COMMIT_YAML, content)
     }
