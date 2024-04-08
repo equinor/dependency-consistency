@@ -1,13 +1,18 @@
-- id: consistent-eslint-dependencies
-  name: Keep ESLint dependencies consistent in hooks
-  description: Ensure that the ESLint dependencies in the pre-commit hooks are
-    consistent with the one used elsewhere in the repository
+- id: consistent-dependencies
+  name: Keep Node.js dependencies consistent in all hooks
+  description: Ensure that the (Node.js) dependencies in the pre-commit hooks are
+    consistent with the one used elsewhere in the repository (that is, in the
+    specified lock file) The ESLint, and prettier hook usually need additional
+    dependencies to work correctly and consistently with the rest of the
+    tooling.
   language: node
   entry: dependency-consistency
   pass_filenames: false
   additional_dependencies:
     - "@yarnpkg/lockfile@1.1.0"
     - semver-sort@1.0.0
+    - sqlite3@5.1.7
+    - sqlite@5.1.1
     - yaml@1.10.2
   stages:
     - commit
