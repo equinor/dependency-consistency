@@ -15,8 +15,29 @@ const {parseVersion, readFile} = require('../shared.cjs');
  * @property {any} [requires]
  * */
 
-/** @type {Record<string, Dependency> } */
-const dependencies = require('../package-lock.json').dependencies;
+/**
+ * Helper function to extract dependencies from version 3 of package-lock.json
+ * @return {Record<string, Dependency>}
+ */
+function getDependencies() {
+	const packages = require('../package-lock.json').packages;
+
+	return Object.keys(packages).reduce((dependencies, key) => {
+		if (key === '""') return dependencies;
+		if (!key.startsWith('node_modules/')) return dependencies;
+		const name = key.replace(/^node_modules\//, '');
+
+		return {
+			...dependencies,
+			[name]: packages[/** @type {keyof packages} */ (key)],
+		};
+	},
+	/** @type {Record<string, Dependency>} */
+	{},
+	);
+}
+
+const dependencies = getDependencies();
 
 /** @type {Record<string, string>} */
 const declaredDependencies = require('../package.json').dependencies;
