@@ -11,6 +11,8 @@
     "dependencies": {
         "@yarnpkg/lockfile": "^1.1.0",
         "semver-sort": "^1.0.0",
+        "sqlite": "^5.1.1",
+        "sqlite3": "^5.1.7",
         "yaml": "^1.10.2"
     },
     "devDependencies": {

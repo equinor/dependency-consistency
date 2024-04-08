@@ -8,6 +8,8 @@
   additional_dependencies:
     - "@yarnpkg/lockfile@1.1.0"
     - semver-sort@1.0.0
+    - sqlite3@5.1.7
+    - sqlite@5.1.1
     - yaml@1.10.2
   stages:
     - commit
