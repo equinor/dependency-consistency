@@ -7,9 +7,9 @@ Helps keep the dependencies defined in your pre-commit hooks for eslint consiste
 ```yaml
 
   - repo: https://github.com/equinor/dependency-consistency
-    rev: v1.0.0
+    rev: v2.0.0
     hooks:
-      - id: consistent-eslint-dependencies
+      - id: consistent-dependencies
         args:
             - <path to lock file>
 ```
