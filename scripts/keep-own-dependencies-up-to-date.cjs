@@ -12,7 +12,7 @@ const hooks = YAML.parse(readFile('.pre-commit-hooks.yaml'))
 
 hooks.forEach(hook => {
     /** @type {string[]} */
-    const updatedDependecies = []
+    const updatedDependencies = []
     hook.additional_dependencies.forEach(dependency => {
         const { name, version } = parseVersion(dependency)
         const reference = dependencies[name]
@@ -20,12 +20,12 @@ hooks.forEach(hook => {
             throw new Error(`Missing dependency '${name}' in package-lock.json`)
         }
         if (reference.version !== version) {
-            updatedDependecies.push(`${name}@${reference.version}`)
+            updatedDependencies.push(`${name}@${reference.version}`)
         } else {
-            updatedDependecies.push(dependency)
+            updatedDependencies.push(dependency)
         }
     })
-    hook.additional_dependencies = updatedDependecies
+    hook.additional_dependencies = updatedDependencies
 })
 
 fs.writeFileSync(".pre-commit-hooks.yaml", YAML.stringify(hooks, {
