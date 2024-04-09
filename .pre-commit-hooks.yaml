@@ -13,6 +13,7 @@
     - semver-sort@1.0.0
     - sqlite3@5.1.7
     - sqlite@5.1.1
+    - toml@3.0.0
     - yaml@1.10.2
   stages:
     - commit

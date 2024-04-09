@@ -2,6 +2,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const lockfile = require('@yarnpkg/lockfile');
 const YAML = require('yaml');
+const toml = require('toml');
 const semverSort = require('semver-sort');
 const sqlite3 = require('sqlite3');
 const {open} = require('sqlite');
@@ -9,14 +10,14 @@ const {open} = require('sqlite');
 const {readFile, parseVersion} = require('./shared.cjs');
 
 if (process.argv.length < 3) {
-	throw new Error('Lock file as argument is required');
+	throw new Error('At least one lock file must be given');
 }
 
 const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
-const LOCK_FILE = process.argv[2];
+const LOCK_FILES = process.argv.slice(2);
 
-/** @typedef {'node'} SupportedLanguages */
-const SUPPORTED_LANGUAGES = /** @type {const} */ (['node']);
+/** @typedef {'node' | 'python'} SupportedLanguages */
+const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
 
 /** @type {Awaited<ReturnType<open>> | null} */
@@ -82,6 +83,31 @@ function parseYarn3LockFile(file) {
 }
 
 /**
+ * @param {string} lockFile
+ * @returns {Record<string, string[]>}
+ * */
+function parsePoetryLockFile(lockFile) {
+	/**
+	 * @typedef Package
+	 * @property {string} name
+	 * @property {string} version
+	 *
+	 * @typedef PoetryLock
+	 * @property {Package[]} package
+	 * */
+
+	/** @type {PoetryLock} */
+	const dependencies = toml.parse(readFile(lockFile));
+	return dependencies.package.reduce((dependencies, {name, version}) => ({
+		...dependencies,
+		[name]: [version],
+	}),
+	/** @type {Record<string, string[]>} */
+	{},
+	);
+}
+
+/**
  * @param {string} file
  * @returns {Record<string, string[]>}
  */
@@ -119,34 +145,50 @@ function parsePackageLockFile(file) {
 }
 
 /**
- * @param {string} lockFile The source file of installed / used dependencies
- * @returns {Record<string, string[]>}
+ * @param {string[]} lockFiles The source file of installed / used dependencies
+ * @returns {Partial<Record<SupportedLanguages, Record<string, string[]>>>}
  */
-function getDependencies(lockFile) {
-	const get = () => {
+function getDependencies(lockFiles) {
+	/** @type {(lockFile: string) => [SupportedLanguages, Record<string, string[]>]} */
+	const get = (lockFile) => {
 		switch (path.basename(lockFile)) {
 			case 'yarn.lock':
 				try {
-					return parseYarnLockFile(lockFile);
+					return ['node', parseYarnLockFile(lockFile)];
 				} catch (e) {
-					return parseYarn3LockFile(lockFile);
+					return ['node', parseYarn3LockFile(lockFile)];
 				}
 
 			case 'package-lock.json':
-				return parsePackageLockFile(lockFile);
+				return ['node', parsePackageLockFile(lockFile)];
+			case 'poetry.lock':
+				return ['python', parsePoetryLockFile(lockFile)];
 			default:
 				throw new Error('Unsupported file');
 		}
 	};
 
-	const dependencies = get();
-	Object.keys(dependencies).forEach((dependency) => {
-		dependencies[dependency] = semverSort.desc(dependencies[dependency]);
+	const dependencies = lockFiles.reduce((dependencies, file) => {
+		const [language, installedVersions] = get(file);
+		if (language in dependencies) {
+			throw new Error('Multiple lock files of the same language are not supported yet');
+		}
+
+		/** @type {Record<string, string[]>}*/(dependencies[/** @type {keyof dependencies} */ (language)]) = installedVersions;
+		return dependencies;
+	},
+	/** @type {Partial<Record<SupportedLanguages, Record<string, string[]>>>} */
+	{},
+	);
+	Object.keys(dependencies).forEach((language) => {
+		Object.keys(dependencies[/** @type {keyof dependencies} */(language)]).forEach((dependency) => {
+			/** @type {Record<string, string[]>} */(dependencies[/** @type {keyof dependencies} */ (language)])[dependency] = semverSort.desc(dependencies[/** @type {keyof dependencies} */ (language)][dependency]);
+		});
 	});
 	return dependencies;
 }
 
-const dependencies = getDependencies(LOCK_FILE);
+const dependencies = getDependencies(LOCK_FILES);
 
 /**
  * @typedef Hook
@@ -184,7 +226,7 @@ async function getHookLanguage(repo, hook) {
 	}
 
 	const longReference = hook.additional_dependencies ? repo.repo + ':' + hook.additional_dependencies.join(',') : repo.repo;
-	const paths = await db.all('select path from repos where repo = ? and ref = ?;', longReference, repo.rev);
+	const paths = await db.all('select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;', longReference, repo.repo, repo.rev);
 	if (paths.length > 0) {
 		/** @type {{path: string | undefined}} */
 		const {path} = paths[0];
@@ -205,6 +247,22 @@ async function getHookLanguage(repo, hook) {
 }
 
 /**
+ * @param {string} name The name of the dependency
+ * @param {string} version Which version of the dependency should be pinned
+ * @param {SupportedLanguages} language Which runtime / runtime is this dependency for?
+ *
+ * @returns {string}
+ * */
+function pinVersionInDependency(name, version, language) {
+	switch (language) {
+		case 'node':
+			return `${name}@${version}`;
+		case 'python':
+			return `${name}==${version}`;
+	}
+}
+
+/**
  * @returns {Promise<void>}
  */
 async function updateDependencies() {
@@ -215,6 +273,7 @@ async function updateDependencies() {
 		repo.hooks.forEach(async hook => {
 			const hookLanguage = await getHookLanguage(repo, hook);
 			if (hookLanguage === null || !SUPPORTED_LANGUAGES.includes(hookLanguage)) return;
+			if (!(hookLanguage in dependencies)) return;
 
 			if (hook?.additional_dependencies) {
 				const mapping = hook.additional_dependencies.reduce(
@@ -224,13 +283,13 @@ async function updateDependencies() {
 						dependency,
 					) => {
 						const {name} = parseVersion(dependency);
-						const installedVersions = dependencies[name];
+						const installedVersions = /**@type {string[]} */(/** @type {Record<string, string[]>} */ (dependencies[hookLanguage])[name]);
 						if (!name) {
-							console.warn(`${dependency} is used in in a pre-commit hook, but is not in ${LOCK_FILE}`);
+							console.warn(`${dependency} is used in in a pre-commit hook, but is not in any of the provided lock files`);
 						}
 
 						mapping[dependency] = installedVersions
-							? `${name}@${installedVersions[0]}`
+							? pinVersionInDependency(name, installedVersions[0], hookLanguage)
 							: dependency;
 						return mapping;
 					},
