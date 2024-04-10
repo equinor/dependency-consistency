@@ -1,6 +1,6 @@
 {
     "name": "dependency-consistency",
-    "version": "2.0.0",
+    "version": "2.1.0",
     "description": "A simple script to ensure that dependencies described in web, and the pre-commit hooks are consistent",
     "license": "MIT",
     "type": "commonjs",
