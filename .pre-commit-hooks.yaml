@@ -10,6 +10,7 @@
   pass_filenames: false
   additional_dependencies:
     - "@yarnpkg/lockfile@1.1.0"
+    - pip-requirements-js@0.2.1
     - semver-sort@1.0.0
     - sqlite3@5.1.7
     - sqlite@5.1.1

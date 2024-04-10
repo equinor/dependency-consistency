@@ -3,6 +3,7 @@ const path = require('node:path');
 const lockfile = require('@yarnpkg/lockfile');
 const YAML = require('yaml');
 const toml = require('toml');
+const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
 const sqlite3 = require('sqlite3');
 const {open} = require('sqlite');
@@ -145,6 +146,33 @@ function parsePackageLockFile(file) {
 }
 
 /**
+ * @param {string} lockFile
+ * @returns {Record<string, string[]>}
+ * */
+function parseRequirementsFile(lockFile) {
+	const content = readFile(lockFile);
+
+	/** @type {Record<string, string[]>} */
+	const dependencies = {};
+	requirements.parsePipRequirementsFile(content
+		.replace(new RegExp(/\\\n/, 'gs'), ' ')
+		.replace(new RegExp('--hash=[a-z0-9]+:[0-9a-f]+', 'g'), '')
+		.replace(new RegExp(' +', 'g'), ' ')
+		.replace(new RegExp('\n+', 'g'), '\n')
+		.replace(new RegExp(';.*$', 'gm'), ''),
+	).forEach((requirement) => {
+		if ('name' in requirement) {
+			if ('versionSpec' in requirement && requirement.versionSpec) {
+				dependencies[requirement.name] = requirement.versionSpec.map(spec => spec.version);
+			} else {
+				dependencies[requirement.name] = [];
+			}
+		}
+	});
+	return dependencies;
+}
+
+/**
  * @param {string[]} lockFiles The source file of installed / used dependencies
  * @returns {Partial<Record<SupportedLanguages, Record<string, string[]>>>}
  */
@@ -164,6 +192,11 @@ function getDependencies(lockFiles) {
 			case 'poetry.lock':
 				return ['python', parsePoetryLockFile(lockFile)];
 			default:
+				const fileName = path.basename(lockFile);
+				if (/requirements(\.[a-z0-9]+)?\.txt/.test(fileName)) {
+					return ['python', parseRequirementsFile(lockFile)];
+				}
+
 				throw new Error('Unsupported file');
 		}
 	};
