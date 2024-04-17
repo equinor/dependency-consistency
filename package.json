@@ -23,7 +23,7 @@
         "@types/eslint__eslintrc": "^2.1.1",
         "@types/eslint__js": "^8.42.3",
         "@types/node": "^18.16.16",
-        "@types/semver-sort": "^0.0.2",
+        "@types/semver-sort": "^0.0.5",
         "@types/yaml": "^1.9.7",
         "@types/yarnpkg__lockfile": "^1.1.6",
         "@typescript-eslint/eslint-plugin": "^7.5.0",
