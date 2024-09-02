@@ -20,7 +20,6 @@ const LOCK_FILES = process.argv.slice(2);
 /** @typedef {'node' | 'python'} SupportedLanguages */
 const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
-
 /** @type {Awaited<ReturnType<open>> | null} */
 let db = null;
 
@@ -50,7 +49,10 @@ function parseYarnLockFile(file) {
  * @returns {void}
  */
 function addElement(mapping, key, value) {
-	if (!(key in mapping)) mapping[key] = [];
+	if (!(key in mapping)) {
+		mapping[key] = [];
+	}
+
 	mapping[key].push(value);
 }
 
@@ -68,18 +70,21 @@ function parseYarn3LockFile(file) {
 		throw new Error('Unsupported format');
 	}
 
-	// delete dependencies.__metadata;
-	return Object.keys(dependencies).reduce((mapping, dependency) => {
-		if (dependency === '__metadata') return mapping;
+	// Delete dependencies.__metadata;
+	return Object.keys(dependencies).reduce(
+		(mapping, dependency) => {
+			if (dependency === '__metadata') {
+				return mapping;
+			}
 
-		const parts = dependency.split('@');
-		const name = !parts[0] ? '@' + parts[1] : parts[0];
-		const installedVersion = dependencies[dependency].version;
-		addElement(mapping, name, installedVersion);
-		return mapping;
-	},
-	/** @type {Record<string, string[]>} */
-	{},
+			const parts = dependency.split('@');
+			const name = parts[0] ? parts[0] : '@' + parts[1];
+			const installedVersion = dependencies[dependency].version;
+			addElement(mapping, name, installedVersion);
+			return mapping;
+		},
+		/** @type {Record<string, string[]>} */
+		{},
 	);
 }
 
@@ -99,12 +104,13 @@ function parsePoetryLockFile(lockFile) {
 
 	/** @type {PoetryLock} */
 	const dependencies = toml.parse(readFile(lockFile));
-	return dependencies.package.reduce((dependencies, {name, version}) => ({
-		...dependencies,
-		[name]: [version],
-	}),
-	/** @type {Record<string, string[]>} */
-	{},
+	return dependencies.package.reduce(
+		(dependencies, {name, version}) => ({
+			...dependencies,
+			[name]: [version],
+		}),
+		/** @type {Record<string, string[]>} */
+		{},
 	);
 }
 
@@ -120,7 +126,9 @@ function parsePackageLockFile(file) {
      */
 	/** @type {Lockfile} */
 	const dependencies = JSON.parse(readFile(file));
-	if (![2, 3].includes(dependencies.lockfileVersion)) throw new Error(`Unsupported version of package-lock.json (${dependencies.lockfileVersion})`);
+	if (![2, 3].includes(dependencies.lockfileVersion)) {
+		throw new Error(`Unsupported version of package-lock.json (${dependencies.lockfileVersion})`);
+	}
 
 	/**
      * @param {string} dependency
@@ -135,13 +143,14 @@ function parsePackageLockFile(file) {
 		return name;
 	}
 
-	return Object.keys(dependencies.packages).filter(name => !!name).reduce((mapping, dependency) => {
-		const name = parseName(dependency);
-		addElement(mapping, name, dependencies.packages[dependency].version);
-		return mapping;
-	},
-	/** @type {Record<string, string[]>} */
-	{},
+	return Object.keys(dependencies.packages).filter(name => Boolean(name)).reduce(
+		(mapping, dependency) => {
+			const name = parseName(dependency);
+			addElement(mapping, name, dependencies.packages[dependency].version);
+			return mapping;
+		},
+		/** @type {Record<string, string[]>} */
+		{},
 	);
 }
 
@@ -155,20 +164,20 @@ function parseRequirementsFile(lockFile) {
 	/** @type {Record<string, string[]>} */
 	const dependencies = {};
 	requirements.parsePipRequirementsFile(content
-		.replace(new RegExp(/\\\n/, 'gs'), ' ')
-		.replace(new RegExp('--hash=[a-z0-9]+:[0-9a-f]+', 'g'), '')
-		.replace(new RegExp(' +', 'g'), ' ')
-		.replace(new RegExp('\n+', 'g'), '\n')
-		.replace(new RegExp(';.*$', 'gm'), ''),
-	).forEach((requirement) => {
-		if ('name' in requirement) {
-			if ('versionSpec' in requirement && requirement.versionSpec) {
-				dependencies[requirement.name] = requirement.versionSpec.map(spec => spec.version);
-			} else {
-				dependencies[requirement.name] = [];
+		.replace(/\\\n/gs, ' ')
+		.replace(/--hash=[a-z0-9]+:[0-9a-f]+/g, '')
+		.replace(/ +/g, ' ')
+		.replace(/\n+/g, '\n')
+		.replace(/;.*$/gm, ''))
+		.forEach(requirement => {
+			if ('name' in requirement) {
+				if ('versionSpec' in requirement && requirement.versionSpec) {
+					dependencies[requirement.name] = requirement.versionSpec.map(spec => spec.version);
+				} else {
+					dependencies[requirement.name] = [];
+				}
 			}
-		}
-	});
+		});
 	return dependencies;
 }
 
@@ -178,12 +187,12 @@ function parseRequirementsFile(lockFile) {
  */
 function getDependencies(lockFiles) {
 	/** @type {(lockFile: string) => [SupportedLanguages, Record<string, string[]>]} */
-	const get = (lockFile) => {
+	const get = lockFile => {
 		switch (path.basename(lockFile)) {
 			case 'yarn.lock':
 				try {
 					return ['node', parseYarnLockFile(lockFile)];
-				} catch (e) {
+				} catch {
 					return ['node', parseYarn3LockFile(lockFile)];
 				}
 
@@ -192,30 +201,33 @@ function getDependencies(lockFiles) {
 			case 'poetry.lock':
 				return ['python', parsePoetryLockFile(lockFile)];
 			default:
+			{
 				const fileName = path.basename(lockFile);
 				if (/requirements(\.[a-z0-9]+)?\.txt/.test(fileName)) {
 					return ['python', parseRequirementsFile(lockFile)];
 				}
 
-				throw new Error('Unsupported file');
+				throw new Error('Unsupported file');}
 		}
 	};
 
-	const dependencies = lockFiles.reduce((dependencies, file) => {
-		const [language, installedVersions] = get(file);
-		if (language in dependencies) {
-			throw new Error('Multiple lock files of the same language are not supported yet');
-		}
+	const dependencies = lockFiles.reduce(
+		(dependencies, file) => {
+			const [language, installedVersions] = get(file);
+			if (language in dependencies) {
+				throw new Error('Multiple lock files of the same language are not supported yet');
+			}
 
-		/** @type {Record<string, string[]>}*/(dependencies[/** @type {keyof dependencies} */ (language)]) = installedVersions;
-		return dependencies;
-	},
-	/** @type {Partial<Record<SupportedLanguages, Record<string, string[]>>>} */
-	{},
+			/** @type {Record<string, string[]>} */(dependencies[/** @type {keyof dependencies} */ (language)]) = installedVersions;
+			return dependencies;
+		},
+		/** @type {Partial<Record<SupportedLanguages, Record<string, string[]>>>} */
+		{},
 	);
-	Object.keys(dependencies).forEach((language) => {
-		Object.keys(dependencies[/** @type {keyof dependencies} */(language)]).forEach((dependency) => {
-			/** @type {Record<string, string[]>} */(dependencies[/** @type {keyof dependencies} */ (language)])[dependency] = semverSort.desc(dependencies[/** @type {keyof dependencies} */ (language)][dependency]);
+	Object.keys(dependencies).forEach(language => {
+		Object.keys(dependencies[/** @type {keyof dependencies} */(language)]).forEach(dependency => {
+			/** @type {Record<string, string[]>} */
+			(dependencies[/** @type {keyof dependencies} */ (language)])[dependency] = semverSort.desc(dependencies[/** @type {keyof dependencies} */ (language)][dependency]);
 		});
 	});
 	return dependencies;
@@ -247,7 +259,9 @@ async function getHookLanguage(repo, hook) {
 	// TODO: Check if local
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
-	} else if (hook.language) {
+	}
+
+	if (hook.language) {
 		return hook.language;
 	}
 
@@ -305,8 +319,13 @@ async function updateDependencies() {
 	preCommit.repos.forEach(repo => {
 		repo.hooks.forEach(async hook => {
 			const hookLanguage = await getHookLanguage(repo, hook);
-			if (hookLanguage === null || !SUPPORTED_LANGUAGES.includes(hookLanguage)) return;
-			if (!(hookLanguage in dependencies)) return;
+			if (hookLanguage === null || !SUPPORTED_LANGUAGES.includes(hookLanguage)) {
+				return;
+			}
+
+			if (!(hookLanguage in dependencies)) {
+				return;
+			}
 
 			if (hook?.additional_dependencies) {
 				const mapping = hook.additional_dependencies.reduce(
@@ -316,7 +335,7 @@ async function updateDependencies() {
 						dependency,
 					) => {
 						const {name} = parseVersion(dependency);
-						const installedVersions = /**@type {string[]} */(/** @type {Record<string, string[]>} */ (dependencies[hookLanguage])[name]);
+						const installedVersions = /** @type {string[]} */(/** @type {Record<string, string[]>} */ (dependencies[hookLanguage])[name]);
 						if (!name) {
 							console.warn(`${dependency} is used in in a pre-commit hook, but is not in any of the provided lock files`);
 						}
@@ -330,7 +349,7 @@ async function updateDependencies() {
 					{},
 				);
 				let content = readFile(PRE_COMMIT_YAML);
-				Object.keys(mapping).forEach((previousVersion) => {
+				Object.keys(mapping).forEach(previousVersion => {
 					const newVersion = mapping[previousVersion];
 					content = content.replace(new RegExp(`( +- *["']?)${previousVersion}(["']? *#.*)?`, 'gi'), '$1' + newVersion + '$2');
 				});

@@ -5,7 +5,7 @@ const fs = require('node:fs');
  * @param {string} path
  * @returns {string}
  */
-const readFile = (path) => fs.readFileSync(path, 'utf8');
+const readFile = path => fs.readFileSync(path, 'utf8');
 
 /**
  * @typedef Dependency
