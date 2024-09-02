@@ -1,15 +1,14 @@
-const globals = require('globals');
-const tseslint = require('typescript-eslint');
+import globals from 'globals';
+import tseslint from 'typescript-eslint';
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-expect-error
+import xoTypescript from 'eslint-config-xo-typescript';
 
-const {FlatCompat} = require('@eslint/eslintrc');
-const pluginJs = require('@eslint/js');
-
-const compat = new FlatCompat({baseDirectory: __dirname, recommendedConfig: pluginJs.configs.recommended});
-
-module.exports = [
+export default [
 	{files: ['**/*.js'], languageOptions: {sourceType: 'commonjs'}},
 	{languageOptions: {globals: globals.node}},
-	...compat.extends('xo-typescript'),
+	// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+	...xoTypescript,
 	...tseslint.configs.recommended,
 	{
 		rules: {

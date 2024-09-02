@@ -2,7 +2,7 @@
     "files": [
         "index.cjs",
         "scripts/keep-own-dependencies-up-to-date.cjs",
-        "eslint.config.cjs",
+        "eslint.config.mjs",
     ],
     "compilerOptions": {
         "target": "ESNext",

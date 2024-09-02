@@ -20,20 +20,27 @@ const {parseVersion, readFile} = require('../shared.cjs');
  * @return {Record<string, Dependency>}
  */
 function getDependencies() {
-	const packages = require('../package-lock.json').packages;
+	const {packages} = require('../package-lock.json');
 
-	return Object.keys(packages).reduce((dependencies, key) => {
-		if (key === '""') return dependencies;
-		if (!key.startsWith('node_modules/')) return dependencies;
-		const name = key.replace(/^node_modules\//, '');
+	return Object.keys(packages).reduce(
+		(dependencies, key) => {
+			if (key === '""') {
+				return dependencies;
+			}
 
-		return {
-			...dependencies,
-			[name]: packages[/** @type {keyof packages} */ (key)],
-		};
-	},
-	/** @type {Record<string, Dependency>} */
-	{},
+			if (!key.startsWith('node_modules/')) {
+				return dependencies;
+			}
+
+			const name = key.replace(/^node_modules\//, '');
+
+			return {
+				...dependencies,
+				[name]: packages[/** @type {keyof packages} */ (key)],
+			};
+		},
+		/** @type {Record<string, Dependency>} */
+		{},
 	);
 }
 
@@ -62,14 +69,14 @@ hooks.forEach(hook => {
 			throw new Error(`Missing dependency '${name}' in package-lock.json`);
 		}
 
-		if (reference.version !== version) {
-			updatedDependencies.push(`${name}@${reference.version}`);
-		} else {
+		if (reference.version === version) {
 			updatedDependencies.push(dependency);
+		} else {
+			updatedDependencies.push(`${name}@${reference.version}`);
 		}
 	});
 	missingDependencies.forEach(dependency => {
-		const {version} = dependencies[dependency] ?? {version : null};
+		const {version} = dependencies[dependency] ?? {version: null};
 		if (!version) {
 			throw new Error(`${dependency} is defined in package.json, but not in package-lock.json`);
 		}
