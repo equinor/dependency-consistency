@@ -26,7 +26,7 @@
         "@types/semver-sort": "^0.0.5",
         "@types/yaml": "^1.9.7",
         "@types/yarnpkg__lockfile": "^1.1.9",
-        "@typescript-eslint/eslint-plugin": "^8.3.0",
+        "@typescript-eslint/eslint-plugin": "^8.5.0",
         "@typescript-eslint/parser": "^8.3.0",
         "eslint": "^9.9.1",
         "eslint-config-xo-typescript": "^6.0.0",
