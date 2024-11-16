@@ -28,7 +28,7 @@
         "@types/yarnpkg__lockfile": "^1.1.9",
         "@typescript-eslint/eslint-plugin": "^8.3.0",
         "@typescript-eslint/parser": "^8.3.0",
-        "eslint": "^9.9.1",
+        "eslint": "^9.15.0",
         "eslint-config-xo-typescript": "^6.0.0",
         "globals": "^15.0.0",
         "typescript": "^5.4.4",
