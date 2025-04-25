@@ -256,7 +256,6 @@ const dependencies = getDependencies(LOCK_FILES);
  *  @returns {Promise<SupportedLanguages | null>}
  *  */
 async function getHookLanguage(repo, hook) {
-	// TODO: Check if local
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
 	}
@@ -265,12 +264,10 @@ async function getHookLanguage(repo, hook) {
 		return hook.language;
 	}
 
-	if (db === null) {
-		db = await open({
-			filename: process.env.HOME + '/.cache/pre-commit/db.db',
-			driver: sqlite3.Database,
-		});
-	}
+	db ??= await open({
+		filename: process.env.HOME + '/.cache/pre-commit/db.db',
+		driver: sqlite3.Database,
+	});
 
 	const longReference = hook.additional_dependencies ? repo.repo + ':' + hook.additional_dependencies.join(',') : repo.repo;
 	const paths = await db.all('select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;', longReference, repo.repo, repo.rev);
