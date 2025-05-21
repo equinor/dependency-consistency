@@ -18,7 +18,7 @@ const readFile = path => fs.readFileSync(path, 'utf8');
  * @returns {Dependency}
  */
 function parseVersion(dependency) {
-	const {name, version} = /^(?<name>@?[a-z-/0-9[\]]+)((@|==)(?<version>.+))?$/.exec(dependency)?.groups ?? {name: '', version: null};
+	const {name, version} = /^(?<name>@?[a-z-/.0-9[\]]+)((@|==)(?<version>.+))?$/.exec(dependency)?.groups ?? {name: '', version: null};
 	return {
 		name,
 		version: version ?? null,
