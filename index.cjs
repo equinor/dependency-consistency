@@ -183,9 +183,9 @@ function parseRequirementsFile(lockFile) {
 		.forEach(requirement => {
 			if ('name' in requirement) {
 				if ('versionSpec' in requirement && requirement.versionSpec) {
-					dependencies[requirement.name] = requirement.versionSpec.map(spec => spec.version);
+					dependencies[requirement.name.toLowerCase()] = requirement.versionSpec.map(spec => spec.version);
 				} else {
-					dependencies[requirement.name] = [];
+					dependencies[requirement.name.toLowerCase()] = [];
 				}
 			}
 		});
@@ -214,7 +214,7 @@ function getDependencies(lockFiles) {
 			default:
 			{
 				const fileName = path.basename(lockFile);
-				if (/requirements(\.[a-z0-9]+)?\.txt/.test(fileName)) {
+				if (/requirements(\.[a-z0-9]+)?\.txt/i.test(fileName)) {
 					return ['python', parseRequirementsFile(lockFile)];
 				}
 
@@ -343,7 +343,7 @@ async function updateDependencies() {
 						dependency,
 					) => {
 						const {name} = parseVersion(dependency);
-						const installedVersions = /** @type {string[]} */(/** @type {Record<string, string[]>} */ (dependencies[hookLanguage])[name]);
+						const installedVersions = /** @type {string[]} */(/** @type {Record<string, string[]>} */ (dependencies[hookLanguage])[name.toLowerCase()]);
 						if (!name) {
 							console.warn(`${dependency} is used in in a pre-commit hook, but is not in any of the provided lock files`);
 						}
