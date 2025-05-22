@@ -6,7 +6,7 @@
     "type": "commonjs",
     "author": "Sindre Nistad",
     "bin": {
-        "dependency-consistency": "./run.sh"
+        "dependency-consistency": "index.cjs"
     },
     "dependencies": {
         "@yarnpkg/lockfile": "^1.1.0",
