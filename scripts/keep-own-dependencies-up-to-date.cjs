@@ -61,11 +61,13 @@ hooks.forEach(hook => {
 	let missingDependencies = Object.keys(declaredDependencies);
 	hook.additional_dependencies.forEach(dependency => {
 		const {name, version} = parseVersion(dependency);
-		missingDependencies = missingDependencies.filter(dependency => dependency !== name);
+		missingDependencies = missingDependencies.filter(
+			dependency => dependency !== name,
+		);
 
 		/** @type {Dependency | undefined} */
 		const reference = dependencies[name];
-		if (!(reference)) {
+		if (!reference) {
 			throw new Error(`Missing dependency '${name}' in package-lock.json`);
 		}
 
@@ -78,7 +80,9 @@ hooks.forEach(hook => {
 	missingDependencies.forEach(dependency => {
 		const {version} = dependencies[dependency] ?? {version: null};
 		if (!version) {
-			throw new Error(`${dependency} is defined in package.json, but not in package-lock.json`);
+			throw new Error(
+				`${dependency} is defined in package.json, but not in package-lock.json`,
+			);
 		}
 
 		updatedDependencies.push(`${dependency}@${version}`);
@@ -86,6 +90,9 @@ hooks.forEach(hook => {
 	hook.additional_dependencies = updatedDependencies.sort();
 });
 
-fs.writeFileSync('.pre-commit-hooks.yaml', YAML.stringify(hooks, {
-	indent: 2,
-}));
+fs.writeFileSync(
+	'.pre-commit-hooks.yaml',
+	YAML.stringify(hooks, {
+		indent: 2,
+	}),
+);

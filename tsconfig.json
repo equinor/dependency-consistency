@@ -1,23 +1,19 @@
 {
-    "include": [
-        "*.cjs",
-        "**/*.cjs",
-        "eslint.config.mjs",
-    ],
-    "compilerOptions": {
-        "target": "ESNext",
-        "module": "CommonJS",
-        "lib": ["ESNext", "DOM"],
-        "types": ["node", "semver-sort"],
-        "moduleResolution": "Node",
-        "allowJs": true,
-        "checkJs": true,
-        "noEmit": true,
-        "isolatedModules": false,
-        "strict": true,
-        "esModuleInterop": true,
-        "skipLibCheck": true,
-        "resolveJsonModule": true,
-        "forceConsistentCasingInFileNames": true
-    }
+	"include": ["*.cjs", "**/*.cjs"],
+	"compilerOptions": {
+		"target": "ESNext",
+		"module": "CommonJS",
+		"lib": ["ESNext", "DOM"],
+		"types": ["node", "semver-sort"],
+		"moduleResolution": "Node",
+		"allowJs": true,
+		"checkJs": true,
+		"noEmit": true,
+		"isolatedModules": false,
+		"strict": true,
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"resolveJsonModule": true,
+		"forceConsistentCasingInFileNames": true
+	}
 }

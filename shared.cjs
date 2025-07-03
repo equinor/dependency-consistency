@@ -11,14 +11,16 @@ const readFile = path => fs.readFileSync(path, 'utf8');
  * @typedef Dependency
  * @property {string} name
  * @property {string | null} version
-*/
+ */
 
 /**
  * @param {string} dependency
  * @returns {Dependency}
  */
 function parseVersion(dependency) {
-	const {name, version} = /^(?<name>@?[a-z-/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)?.groups ?? {name: '', version: null};
+	const {name, version} =
+		/^(?<name>@?[a-z-/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)
+			?.groups ?? {name: '', version: null};
 	return {
 		name,
 		version: version ?? null,
@@ -34,19 +36,15 @@ function parseVersion(dependency) {
  */
 function escapeRegex(string) {
 	/** @type {function(string): string} */
-	let escape;
+	let _escape;
 	if ('escape' in RegExp && typeof RegExp.escape === 'function') {
 		// @ts-expect-error TypeScript is not aware of the new escape function
-		({escape} = RegExp);
+		({escape: _escape} = RegExp);
 	} else {
-		escape = string => (
-			string
-				.replace(/\[/g, '\\[')
-				.replace(/]/g, '\\]')
-		);
+		_escape = string => string.replace(/\[/g, '\\[').replace(/]/g, '\\]');
 	}
 
-	return escape(string);
+	return _escape(string);
 }
 
 module.exports = {
