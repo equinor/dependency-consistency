@@ -1,37 +1,28 @@
 {
-    "name": "dependency-consistency",
-    "version": "2.1.2",
-    "description": "A simple script to ensure that dependencies described in web, and the pre-commit hooks are consistent",
-    "license": "MIT",
-    "type": "commonjs",
-    "author": "Sindre Nistad",
-    "bin": {
-        "dependency-consistency": "index.cjs"
-    },
-    "dependencies": {
-        "@yarnpkg/lockfile": "^1.1.0",
-        "pip-requirements-js": "^0.2.1",
-        "semver-sort": "^1.0.0",
-        "sqlite": "^5.1.1",
-        "sqlite3": "^5.1.7",
-        "toml": "^3.0.0",
-        "yaml": "^1.10.2"
-    },
-    "devDependencies": {
-        "@eslint/eslintrc": "^3.0.2",
-        "@eslint/js": "^9.0.0",
-        "@types/eslint__eslintrc": "^2.1.1",
-        "@types/eslint__js": "^8.42.3",
-        "@types/node": "^18.16.16",
-        "@types/semver-sort": "^0.0.5",
-        "@types/yaml": "^1.9.7",
-        "@types/yarnpkg__lockfile": "^1.1.9",
-        "@typescript-eslint/eslint-plugin": "^8.3.0",
-        "@typescript-eslint/parser": "^8.3.0",
-        "eslint": "^9.9.1",
-        "eslint-config-xo-typescript": "^6.0.0",
-        "globals": "^15.0.0",
-        "typescript": "^5.4.4",
-        "typescript-eslint": "^8.3.0"
-    }
+	"name": "dependency-consistency",
+	"version": "2.1.2",
+	"description": "A simple script to ensure that dependencies described in web, and the pre-commit hooks are consistent",
+	"license": "MIT",
+	"type": "commonjs",
+	"author": "Sindre Nistad",
+	"bin": {
+		"dependency-consistency": "index.cjs"
+	},
+	"dependencies": {
+		"@yarnpkg/lockfile": "^1.1.0",
+		"pip-requirements-js": "^0.2.1",
+		"semver-sort": "^1.0.0",
+		"sqlite": "^5.1.1",
+		"sqlite3": "^5.1.7",
+		"toml": "^3.0.0",
+		"yaml": "^1.10.2"
+	},
+	"devDependencies": {
+		"@types/node": "^18.16.16",
+		"@types/semver-sort": "^0.0.5",
+		"@types/yaml": "^1.9.7",
+		"@types/yarnpkg__lockfile": "^1.1.9",
+		"globals": "^15.0.0",
+		"typescript": "^5.4.4"
+	}
 }

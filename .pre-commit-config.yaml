@@ -34,19 +34,7 @@ repos:
             exclude: tsconfig.json  # Uses JSON5
           - id: check-yaml
 
-    -   repo: https://github.com/pre-commit/mirrors-eslint
-        rev: 'v9.27.0'
+    -   repo: https://github.com/biomejs/pre-commit
+        rev: "v2.0.6"  # Use the sha / tag you want to point at
         hooks:
-          - id: eslint
-            name: 'ESLint'
-            additional_dependencies:
-              - '@eslint/eslintrc@3.3.1'
-              - '@eslint/js@9.27.0'
-              - '@typescript-eslint/eslint-plugin@8.32.1'
-              - eslint-config-xo-typescript@6.0.0
-              - eslint@9.27.0
-              - globals@15.15.0
-              - typescript-eslint@8.32.1
-              - yaml@1.10.2
-            args:
-              - --fix
+        -   id: biome-check
