@@ -1,7 +1,7 @@
 {
-    "files": [
-        "index.cjs",
-        "scripts/keep-own-dependencies-up-to-date.cjs",
+    "include": [
+        "*.cjs",
+        "**/*.cjs",
         "eslint.config.mjs",
     ],
     "compilerOptions": {
