@@ -6,8 +6,7 @@ const YAML = require('yaml');
 const toml = require('toml');
 const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
-const sqlite3 = require('sqlite3');
-const {open} = require('sqlite');
+const sqlite = require('node:sqlite');
 
 const {readFile, parseVersion, escapeRegex} = require('./shared.cjs');
 
@@ -21,7 +20,7 @@ const LOCK_FILES = process.argv.slice(2);
 /** @typedef {'node' | 'python'} SupportedLanguages */
 const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
-/** @type {Awaited<ReturnType<open>> | null} */
+/** @type {sqlite.DatabaseSync | null} */
 let db = null;
 
 /**
@@ -296,23 +295,17 @@ async function getHookLanguage(repo, hook) {
 	if (hook.language) {
 		return hook.language;
 	}
-
-	db ??= await open({
-		filename: process.env.HOME + '/.cache/pre-commit/db.db',
-		driver: sqlite3.Database,
-	});
+	db = new sqlite.DatabaseSync(process.env.HOME + '/.cache/pre-commit/db.db');
 
 	const longReference = hook.additional_dependencies
 		? repo.repo + ':' + hook.additional_dependencies.join(',')
 		: repo.repo;
-	const paths = await db.all(
-		'select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;',
-		longReference,
-		repo.repo,
-		repo.rev,
-	);
+	const paths = db
+		.prepare(
+			'select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;',
+		)
+		.all(longReference, repo.repo, repo.rev);
 	if (paths.length > 0) {
-		/** @type {{path: string | undefined}} */
 		const {path} = paths[0];
 		if (!path) {
 			console.warn(

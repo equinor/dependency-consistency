@@ -1,6 +1,6 @@
 {
 	"name": "dependency-consistency",
-	"version": "2.1.2",
+	"version": "3.0.0",
 	"description": "A simple script to ensure that dependencies described in web, and the pre-commit hooks are consistent",
 	"license": "MIT",
 	"type": "commonjs",
@@ -12,13 +12,11 @@
 		"@yarnpkg/lockfile": "^1.1.0",
 		"pip-requirements-js": "^0.2.1",
 		"semver-sort": "^1.0.0",
-		"sqlite": "^5.1.1",
-		"sqlite3": "^5.1.7",
 		"toml": "^3.0.0",
 		"yaml": "^1.10.2"
 	},
 	"devDependencies": {
-		"@types/node": "^18.16.16",
+		"@types/node": "^24.3.0",
 		"@types/semver-sort": "^0.0.5",
 		"@types/yaml": "^1.9.7",
 		"@types/yarnpkg__lockfile": "^1.1.9",
