@@ -10,6 +10,8 @@ const sqlite = require('node:sqlite');
 
 const {readFile, parseVersion, escapeRegex} = require('./shared.cjs');
 
+/** @import {SupportedLanguages, Repo, Hook, PreCommit} from './types' */
+
 if (process.argv.length < 3) {
 	throw new Error('At least one lock file must be given');
 }
@@ -17,7 +19,7 @@ if (process.argv.length < 3) {
 const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
 const LOCK_FILES = process.argv.slice(2);
 
-/** @typedef {'node' | 'python'} SupportedLanguages */
+/** @constant {SupportedLanguages} */
 const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
 /** @type {sqlite.DatabaseSync} */
@@ -268,21 +270,6 @@ function getDependencies(lockFiles) {
 }
 
 const dependencies = getDependencies(LOCK_FILES);
-
-/**
- * @typedef Hook
- * @property {string} id
- * @property {string[]} [additional_dependencies]
- * @property {SupportedLanguages} [language]
- *
- * @typedef Repo
- * @property {string} repo
- * @property {string} rev
- * @property {Hook[]} hooks
- *
- * @typedef PreCommit
- * @property {Repo[]} repos
- */
 
 /**
  *  @param {Repo} repo The repository for these hooks
