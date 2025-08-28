@@ -20,8 +20,10 @@ const LOCK_FILES = process.argv.slice(2);
 /** @typedef {'node' | 'python'} SupportedLanguages */
 const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
-/** @type {sqlite.DatabaseSync | null} */
-let db = null;
+/** @type {sqlite.DatabaseSync} */
+const db = new sqlite.DatabaseSync(
+	`${process.env.HOME}/.cache/pre-commit/db.db`,
+);
 
 /**
  * @param {string} file
@@ -295,7 +297,6 @@ async function getHookLanguage(repo, hook) {
 	if (hook.language) {
 		return hook.language;
 	}
-	db = new sqlite.DatabaseSync(process.env.HOME + '/.cache/pre-commit/db.db');
 
 	const longReference = hook.additional_dependencies
 		? repo.repo + ':' + hook.additional_dependencies.join(',')
