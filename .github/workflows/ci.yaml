@@ -15,6 +15,7 @@ jobs:
       - uses: actions/setup-python@v4
       - uses: actions/setup-node@v4
         with:
+          node-version-file: .tool-versions
           cache: npm
           cache-dependency-path: 'package-lock.json'
       - run: npm install

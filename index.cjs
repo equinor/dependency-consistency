@@ -6,8 +6,7 @@ const YAML = require('yaml');
 const toml = require('toml');
 const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
-const sqlite3 = require('sqlite3');
-const {open} = require('sqlite');
+const sqlite = require('node:sqlite');
 
 const {readFile, parseVersion, escapeRegex} = require('./shared.cjs');
 
@@ -21,8 +20,10 @@ const LOCK_FILES = process.argv.slice(2);
 /** @typedef {'node' | 'python'} SupportedLanguages */
 const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
 
-/** @type {Awaited<ReturnType<open>> | null} */
-let db = null;
+/** @type {sqlite.DatabaseSync} */
+const db = new sqlite.DatabaseSync(
+	`${process.env.HOME}/.cache/pre-commit/db.db`,
+);
 
 /**
  * @param {string} file
@@ -286,9 +287,9 @@ const dependencies = getDependencies(LOCK_FILES);
 /**
  *  @param {Repo} repo The repository for these hooks
  *  @param {Hook} hook The specific hook we are evaluating
- *  @returns {Promise<SupportedLanguages | null>}
+ *  @returns {SupportedLanguages | null}
  *  */
-async function getHookLanguage(repo, hook) {
+function getHookLanguage(repo, hook) {
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
 	}
@@ -297,22 +298,15 @@ async function getHookLanguage(repo, hook) {
 		return hook.language;
 	}
 
-	db ??= await open({
-		filename: process.env.HOME + '/.cache/pre-commit/db.db',
-		driver: sqlite3.Database,
-	});
-
 	const longReference = hook.additional_dependencies
 		? repo.repo + ':' + hook.additional_dependencies.join(',')
 		: repo.repo;
-	const paths = await db.all(
-		'select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;',
-		longReference,
-		repo.repo,
-		repo.rev,
-	);
+	const paths = db
+		.prepare(
+			'select path from repos where (repo = ? or repo = ?) and ref = ? order by repo desc;',
+		)
+		.all(longReference, repo.repo, repo.rev);
 	if (paths.length > 0) {
-		/** @type {{path: string | undefined}} */
 		const {path} = paths[0];
 		if (!path) {
 			console.warn(
@@ -353,15 +347,15 @@ function pinVersionInDependency(name, version, language) {
 }
 
 /**
- * @returns {Promise<void>}
+ * @returns {void}
  */
-async function updateDependencies() {
+function updateDependencies() {
 	/** @type {PreCommit} */
 	const preCommit = YAML.parse(readFile(PRE_COMMIT_YAML));
 
 	preCommit.repos.forEach(repo => {
 		repo.hooks.forEach(async hook => {
-			const hookLanguage = await getHookLanguage(repo, hook);
+			const hookLanguage = getHookLanguage(repo, hook);
 			if (
 				hookLanguage === null ||
 				!SUPPORTED_LANGUAGES.includes(hookLanguage)
@@ -417,6 +411,4 @@ async function updateDependencies() {
 	});
 }
 
-(async () => {
-	await updateDependencies();
-})();
+updateDependencies();
