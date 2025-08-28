@@ -287,9 +287,9 @@ const dependencies = getDependencies(LOCK_FILES);
 /**
  *  @param {Repo} repo The repository for these hooks
  *  @param {Hook} hook The specific hook we are evaluating
- *  @returns {Promise<SupportedLanguages | null>}
+ *  @returns {SupportedLanguages | null}
  *  */
-async function getHookLanguage(repo, hook) {
+function getHookLanguage(repo, hook) {
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
 	}
@@ -347,15 +347,15 @@ function pinVersionInDependency(name, version, language) {
 }
 
 /**
- * @returns {Promise<void>}
+ * @returns {void}
  */
-async function updateDependencies() {
+function updateDependencies() {
 	/** @type {PreCommit} */
 	const preCommit = YAML.parse(readFile(PRE_COMMIT_YAML));
 
 	preCommit.repos.forEach(repo => {
 		repo.hooks.forEach(async hook => {
-			const hookLanguage = await getHookLanguage(repo, hook);
+			const hookLanguage = getHookLanguage(repo, hook);
 			if (
 				hookLanguage === null ||
 				!SUPPORTED_LANGUAGES.includes(hookLanguage)
@@ -411,6 +411,4 @@ async function updateDependencies() {
 	});
 }
 
-(async () => {
-	await updateDependencies();
-})();
+updateDependencies();
