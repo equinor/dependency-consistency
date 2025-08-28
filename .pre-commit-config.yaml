@@ -1,41 +1,50 @@
----
 # See https://pre-commit.com for more information
 # See https://pre-commit.com/hooks.html for more hooks
 repos:
-    - repo: local
-      hooks:
-          - id: check-typescript
-            name: Check TypeScript
-            language: node
-            entry: npm exec tsc
-            always_run: true
-            pass_filenames: false
+  - repo: local
+    hooks:
+      - id: check-typescript
+        name: Check TypeScript
+        language: node
+        language_version: 24.6.0
+        entry: npm exec tsc
+        always_run: true
+        pass_filenames: false
 
-          - id: keep-dependencies-consistent
-            name: Keep specified dependencies consistent
-            language: node
-            entry: node scripts/keep-own-dependencies-up-to-date.cjs
-            pass_filenames: false
-            files: ^(.pre-commit-hooks.yaml|package-lock.json)$
+      - id: keep-dependencies-consistent
+        name: Keep specified dependencies consistent
+        language: node
+        language_version: 24.6.0
+        entry: node scripts/keep-own-dependencies-up-to-date.cjs
+        pass_filenames: false
+        files: ^(.pre-commit-hooks.yaml|package-lock.json)$
 
-          - id: consistent-dependencies
-            name: Keep these dependencies consistent
-            language: node
-            entry: node index.cjs
-            language_version: 24.6.0
-            pass_filenames: false
-            files: ^(.pre-commit-config.yaml|package-lock.json)$
-            args:
-              - package-lock.json
+      - id: consistent-runtimes
+        name: Keep runtimes consistent
+        language: node
+        language_version: 24.6.0
+        entry: node scripts/keep-runtimes-consistent.cjs
+        pass_filenames: false
+        files: ^(.pre-commit-(config|hooks).yaml|.tool-versions)$
 
-    -   repo: https://github.com/pre-commit/pre-commit-hooks
-        rev: 'v5.0.0'
-        hooks:
-          - id: check-json
-            exclude: tsconfig.json  # Uses JSON5
-          - id: check-yaml
+      - id: consistent-dependencies
+        name: Keep these dependencies consistent
+        language: node
+        entry: node index.cjs
+        language_version: 24.6.0
+        pass_filenames: false
+        files: ^(.pre-commit-config.yaml|package-lock.json)$
+        args:
+          - package-lock.json
 
-    -   repo: https://github.com/biomejs/pre-commit
-        rev: "v2.0.6"  # Use the sha / tag you want to point at
-        hooks:
-        -   id: biome-check
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: 'v5.0.0'
+    hooks:
+      - id: check-json
+        exclude: tsconfig.json # Uses JSON5
+      - id: check-yaml
+
+  - repo: https://github.com/biomejs/pre-commit
+    rev: "v2.0.6" # Use the sha / tag you want to point at
+    hooks:
+      - id: biome-check
