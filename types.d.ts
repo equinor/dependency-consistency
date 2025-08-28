@@ -16,3 +16,5 @@ export interface Repo {
 export interface PreCommit {
 	repos: Repo[];
 }
+
+export type ChangeYaml<T> = (root: T) => void;
