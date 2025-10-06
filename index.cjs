@@ -3,7 +3,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const lockfile = require('@yarnpkg/lockfile');
 const YAML = require('yaml');
-const toml = require('toml');
+const toml = require('smol-toml');
 const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
 const sqlite = require('node:sqlite');
@@ -115,8 +115,9 @@ function parsePoetryLockFile(lockFile) {
 	 * @property {Package[]} package
 	 * */
 
-	/** @type {PoetryLock} */
-	const dependencies = toml.parse(readFile(lockFile));
+	const dependencies = /** @type {PoetryLock} */ (
+		toml.parse(readFile(lockFile))
+	);
 	return dependencies.package.reduce(
 		(dependencies, {name, version, extras}) => ({
 			...dependencies,
@@ -157,8 +158,7 @@ function parseUvLockFile(lockFile) {
 	 * @property {string} requires-python
 	 * @property {Package[]} package
 	 */
-	/** @type {UvLock} */
-	const dependencies = toml.parse(readFile(lockFile));
+	const dependencies = /** @type {UvLock} */ (toml.parse(readFile(lockFile)));
 	return dependencies.package.reduce(
 		(
 			dependencies,
