@@ -22,7 +22,7 @@ const readFile = path => fs.readFileSync(path, 'utf8');
  */
 function parseVersion(dependency) {
 	const {name, version} =
-		/^(?<name>@?[a-z-/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)
+		/^(?<name>@?[a-z-_/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)
 			?.groups ?? {name: '', version: null};
 	return {
 		name,
