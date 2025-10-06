@@ -25,7 +25,10 @@ const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
 const LOCK_FILES = process.argv.slice(2);
 
 /** @constant {SupportedLanguages} */
-const SUPPORTED_LANGUAGES = /** @type {const} */ (['node', 'python']);
+const SUPPORTED_LANGUAGES = /** @type {['node', 'python']} */ [
+	'node',
+	'python',
+];
 
 /** @type {sqlite.DatabaseSync} */
 const db = new sqlite.DatabaseSync(
