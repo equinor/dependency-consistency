@@ -8,7 +8,12 @@ const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
 const sqlite = require('node:sqlite');
 
-const {readFile, parseVersion, escapeRegex} = require('./shared.cjs');
+const {
+	readFile,
+	parseVersion,
+	escapeRegex,
+	normalizePythonPackage,
+} = require('./shared.cjs');
 
 /** @import {SupportedLanguages, Repo, Hook, PreCommit} from './types' */
 
@@ -411,7 +416,11 @@ function updateDependencies() {
 						const installedVersions = /** @type {string[]} */ (
 							/** @type {Record<string, string[]>} */ (
 								dependencies[hookLanguage]
-							)[name.toLowerCase()]
+							)[
+								hookLanguage === 'python'
+									? normalizePythonPackage(name)
+									: name.toLowerCase()
+							]
 						);
 						if (!name) {
 							console.warn(

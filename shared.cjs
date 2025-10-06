@@ -11,6 +11,17 @@ const yaml = require('yaml');
 const readFile = path => fs.readFileSync(path, 'utf8');
 
 /**
+ * Simple function which implements Python normalization of package names
+ * https://packaging.python.org/en/latest/specifications/name-normalization/#name-normalization
+ *
+ * @param {string} name
+ * @returns {string}
+ */
+function normalizePythonPackage(name) {
+	return name.replace(/[-_.]+/g, '-').toLowerCase();
+}
+
+/**
  * @typedef Dependency
  * @property {string} name
  * @property {string | null} version
@@ -22,7 +33,7 @@ const readFile = path => fs.readFileSync(path, 'utf8');
  */
 function parseVersion(dependency) {
 	const {name, version} =
-		/^(?<name>@?[a-z-/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)
+		/^(?<name>@?[a-z-_/.0-9[\]]+)((@|==)(?<version>.+))?$/i.exec(dependency)
 			?.groups ?? {name: '', version: null};
 	return {
 		name,
@@ -151,4 +162,5 @@ module.exports = {
 	parseVersion,
 	escapeRegex,
 	updateYamlFile,
+	normalizePythonPackage,
 };
