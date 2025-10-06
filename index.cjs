@@ -17,23 +17,11 @@ const {
 
 /** @import {SupportedLanguages, Repo, Hook, PreCommit} from './types' */
 
-if (process.argv.length < 3) {
-	throw new Error('At least one lock file must be given');
-}
-
-const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
-const LOCK_FILES = process.argv.slice(2);
-
 /** @constant {SupportedLanguages} */
 const SUPPORTED_LANGUAGES = /** @type {['node', 'python']} */ [
 	'node',
 	'python',
 ];
-
-/** @type {sqlite.DatabaseSync} */
-const db = new sqlite.DatabaseSync(
-	`${process.env.HOME}/.cache/pre-commit/db.db`,
-);
 
 /**
  * @param {string} file
@@ -250,8 +238,12 @@ function parseRequirementsFile(lockFile) {
 }
 
 /**
+ * @typedef {Partial<Record<SupportedLanguages, Record<string, string[]>>>} Dependencies
+ * */
+
+/**
  * @param {string[]} lockFiles The source file of installed / used dependencies
- * @returns {Partial<Record<SupportedLanguages, Record<string, string[]>>>}
+ * @returns {Dependencies}
  */
 function getDependencies(lockFiles) {
 	/** @type {(lockFile: string) => [SupportedLanguages, Record<string, string[]>]} */
@@ -314,14 +306,13 @@ function getDependencies(lockFiles) {
 	return dependencies;
 }
 
-const dependencies = getDependencies(LOCK_FILES);
-
 /**
+ * @param {sqlite.DatabaseSync} db
  *  @param {Repo} repo The repository for these hooks
  *  @param {Hook} hook The specific hook we are evaluating
  *  @returns {SupportedLanguages | null}
  *  */
-function getHookLanguage(repo, hook) {
+function getHookLanguage(db, repo, hook) {
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
 	}
@@ -379,15 +370,18 @@ function pinVersionInDependency(name, version, language) {
 }
 
 /**
+ * @param {sqlite.DatabaseSync} db
+ * @param {Dependencies} dependencies
+ * @param {string} preCommitFile
  * @returns {void}
  */
-function updateDependencies() {
+function updateDependencies(db, dependencies, preCommitFile) {
 	/** @type {PreCommit} */
-	const preCommit = YAML.parse(readFile(PRE_COMMIT_YAML));
+	const preCommit = YAML.parse(readFile(preCommitFile));
 
 	preCommit.repos.forEach(repo => {
 		repo.hooks.forEach(async hook => {
-			const hookLanguage = getHookLanguage(repo, hook);
+			const hookLanguage = getHookLanguage(db, repo, hook);
 			if (
 				hookLanguage === null ||
 				!SUPPORTED_LANGUAGES.includes(hookLanguage)
@@ -430,7 +424,7 @@ function updateDependencies() {
 					/** @type {Record<string, string>} */
 					{},
 				);
-				let content = readFile(PRE_COMMIT_YAML);
+				let content = readFile(preCommitFile);
 				Object.keys(mapping).forEach(previousVersion => {
 					const newVersion = mapping[previousVersion];
 					content = content.replace(
@@ -441,10 +435,31 @@ function updateDependencies() {
 						`$1${newVersion}$2$3$4`,
 					);
 				});
-				fs.writeFileSync(PRE_COMMIT_YAML, content);
+				fs.writeFileSync(preCommitFile, content);
 			}
 		});
 	});
 }
 
-updateDependencies();
+/**
+ * @returns {void}
+ * */
+function main() {
+	if (process.argv.length < 3) {
+		throw new Error('At least one lock file must be given');
+	}
+	const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
+
+	const LOCK_FILES = process.argv.slice(2);
+
+	const dependencies = getDependencies(LOCK_FILES);
+
+	/** @type {sqlite.DatabaseSync} */
+	const db = new sqlite.DatabaseSync(
+		`${process.env.HOME}/.cache/pre-commit/db.db`,
+	);
+
+	updateDependencies(db, dependencies, PRE_COMMIT_YAML);
+}
+
+main();
