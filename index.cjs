@@ -132,6 +132,50 @@ function parsePoetryLockFile(lockFile) {
 }
 
 /**
+ * @param {string} lockFile
+ * @returns {Record<string, string[]>}
+ * */
+function parseUvLockFile(lockFile) {
+	/**
+	 * @typedef OptionalDependency
+	 * @property {string} name
+	 * @property {string[] | undefined} extras
+	 *
+	 * @typedef Package
+	 * @property {string} name
+	 * @property {string} version
+	 * @property {Record<string, OptionalDependency[]>} optional-dependencies
+	 *
+	 * @typedef UvLock
+	 * @property {number} version
+	 * @property {number} revision
+	 * @property {string} requires-python
+	 * @property {Package[]} package
+	 */
+	/** @type {UvLock} */
+	const dependencies = toml.parse(readFile(lockFile));
+	return dependencies.package.reduce(
+		(
+			dependencies,
+			{name, version, 'optional-dependencies': optional_dependencies},
+		) => ({
+			...dependencies,
+			[name]: [version],
+			...(optional_dependencies
+				? Object.keys(optional_dependencies).reduce(
+						(extras, extra) => ({
+							...extras,
+							[`${name}[${extra}]`]: [version],
+						}),
+						{} /** @type {Record<string, string[]>}*/,
+					)
+				: {}),
+		}),
+		{} /** @type {Record<string, string[]>}*/,
+	);
+}
+
+/**
  * @param {string} file
  * @returns {Record<string, string[]>}
  */
@@ -225,6 +269,8 @@ function getDependencies(lockFiles) {
 				return ['node', parsePackageLockFile(lockFile)];
 			case 'poetry.lock':
 				return ['python', parsePoetryLockFile(lockFile)];
+			case 'uv.lock':
+				return ['python', parseUvLockFile(lockFile)];
 			default: {
 				const fileName = path.basename(lockFile);
 				if (/requirements(\.[a-z0-9]+)?\.txt/i.test(fileName)) {
