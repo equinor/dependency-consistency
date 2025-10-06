@@ -90,7 +90,7 @@ function parseYarn3LockFile(file) {
 			}
 
 			const parts = dependency.split('@');
-			const name = parts[0] ? parts[0] : '@' + parts[1];
+			const name = parts[0] ? parts[0] : `@${parts[1]}`;
 			const installedVersion = dependencies[dependency].version;
 			addElement(mapping, name, installedVersion);
 			return mapping;
@@ -119,21 +119,16 @@ function parsePoetryLockFile(lockFile) {
 		toml.parse(readFile(lockFile))
 	);
 	return dependencies.package.reduce(
-		(dependencies, {name, version, extras}) => ({
-			...dependencies,
-			[name]: [version],
-			...(extras
-				? Object.keys(extras).reduce(
-						(dependencies, extra) => ({
-							...dependencies,
-							[`${name}[${extra}]`]: [version],
-						}),
-						{},
-					)
-				: {}),
-		}),
-		/** @type {Record<string, string[]>} */
-		{},
+		(dependencies, {name, version, extras}) => {
+			dependencies[name] = [version];
+			if (extras) {
+				Object.keys(extras).forEach(extra => {
+					dependencies[`${name}[${extra}]`] = [version];
+				});
+			}
+			return dependencies;
+		},
+		/** @type {Record<string, string[]>} */ ({}),
 	);
 }
 
@@ -163,20 +158,16 @@ function parseUvLockFile(lockFile) {
 		(
 			dependencies,
 			{name, version, 'optional-dependencies': optional_dependencies},
-		) => ({
-			...dependencies,
-			[name]: [version],
-			...(optional_dependencies
-				? Object.keys(optional_dependencies).reduce(
-						(extras, extra) => ({
-							...extras,
-							[`${name}[${extra}]`]: [version],
-						}),
-						{} /** @type {Record<string, string[]>}*/,
-					)
-				: {}),
-		}),
-		{} /** @type {Record<string, string[]>}*/,
+		) => {
+			dependencies[name] = [version];
+			if (optional_dependencies) {
+				Object.keys(optional_dependencies).forEach(extra => {
+					dependencies[`${name}[${extra}]`] = [version];
+				});
+			}
+			return dependencies;
+		},
+		/** @type {Record<string, string[]>} */ ({}),
 	);
 }
 
@@ -205,7 +196,7 @@ function parsePackageLockFile(file) {
 	function parseName(dependency) {
 		let [name, namespace] = dependency.split('/').reverse();
 		if (namespace.startsWith('@')) {
-			name = namespace + '/' + name;
+			name = `${namespace}/${name}`;
 		}
 
 		return name;
@@ -337,7 +328,7 @@ function getHookLanguage(repo, hook) {
 	}
 
 	const longReference = hook.additional_dependencies
-		? repo.repo + ':' + hook.additional_dependencies.join(',')
+		? `${repo.repo}:${hook.additional_dependencies.join(',')}`
 		: repo.repo;
 	const paths = db
 		.prepare(
@@ -355,7 +346,7 @@ function getHookLanguage(repo, hook) {
 
 		/** @type {{id: string, language: SupportedLanguages}[]} */
 		const preCommitConfiguration = YAML.parse(
-			readFile(path + '/.pre-commit-hooks.yaml'),
+			readFile(`${path}/.pre-commit-hooks.yaml`),
 		);
 		const {language} = preCommitConfiguration.find(
 			({id}) => id === hook.id,
@@ -444,7 +435,7 @@ function updateDependencies() {
 							`( +- *["']?)${escapeRegex(previousVersion)}(["'])?( *#.*)?(\n)`,
 							'gi',
 						),
-						'$1' + newVersion + '$2$3$4',
+						`$1${newVersion}$2$3$4`,
 					);
 				});
 				fs.writeFileSync(PRE_COMMIT_YAML, content);
