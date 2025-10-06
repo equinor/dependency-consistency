@@ -33,13 +33,12 @@ function getDependencies() {
 
 			const name = key.replace(/^node_modules\//, '');
 
-			return {
-				...dependencies,
-				[name]: packages[/** @type {keyof packages} */ (key)],
-			};
+			dependencies[name] = /** @type {Dependency} */ (
+				packages[/** @type {keyof packages} */ (key)]
+			);
+			return dependencies;
 		},
-		/** @type {Record<string, Dependency>} */
-		{},
+		/** @type {Record<string, Dependency>} */ ({}),
 	);
 }
 

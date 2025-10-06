@@ -119,21 +119,16 @@ function parsePoetryLockFile(lockFile) {
 		toml.parse(readFile(lockFile))
 	);
 	return dependencies.package.reduce(
-		(dependencies, {name, version, extras}) => ({
-			...dependencies,
-			[name]: [version],
-			...(extras
-				? Object.keys(extras).reduce(
-						(dependencies, extra) => ({
-							...dependencies,
-							[`${name}[${extra}]`]: [version],
-						}),
-						{},
-					)
-				: {}),
-		}),
-		/** @type {Record<string, string[]>} */
-		{},
+		(dependencies, {name, version, extras}) => {
+			dependencies[name] = [version];
+			if (extras) {
+				Object.keys(extras).forEach(extra => {
+					dependencies[`${name}[${extra}]`] = [version];
+				});
+			}
+			return dependencies;
+		},
+		/** @type {Record<string, string[]>} */ ({}),
 	);
 }
 
@@ -163,20 +158,16 @@ function parseUvLockFile(lockFile) {
 		(
 			dependencies,
 			{name, version, 'optional-dependencies': optional_dependencies},
-		) => ({
-			...dependencies,
-			[name]: [version],
-			...(optional_dependencies
-				? Object.keys(optional_dependencies).reduce(
-						(extras, extra) => ({
-							...extras,
-							[`${name}[${extra}]`]: [version],
-						}),
-						{} /** @type {Record<string, string[]>}*/,
-					)
-				: {}),
-		}),
-		{} /** @type {Record<string, string[]>}*/,
+		) => {
+			dependencies[name] = [version];
+			if (optional_dependencies) {
+				Object.keys(optional_dependencies).forEach(extra => {
+					dependencies[`${name}[${extra}]`] = [version];
+				});
+			}
+			return dependencies;
+		},
+		/** @type {Record<string, string[]>} */ ({}),
 	);
 }
 
