@@ -11,7 +11,7 @@
   pass_filenames: false
   additional_dependencies:
     - "@yarnpkg/lockfile@1.1.0"
-    - pip-requirements-js@0.2.1
+    - pip-requirements-js@1.0.2
     - semver-sort@1.0.0
     - smol-toml@1.4.2
     - yaml@2.8.1
