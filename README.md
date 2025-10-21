@@ -12,7 +12,7 @@ That way, when changes are made in the main dependencies, and they are detected 
 ```yaml
 
   - repo: https://github.com/equinor/dependency-consistency
-    rev: v3.0.0
+    rev: v3.1.0
     hooks:
       - id: consistent-dependencies
         args:
