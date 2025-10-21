@@ -69,72 +69,99 @@ function escapeRegex(string) {
  */
 function updateYamlFile(filePath, callback) {
 	/**
-	 * @import {YAMLSeq, Scalar, YAMLMap} from 'yaml/types'
-	 * @typedef {YAMLSeq | YAMLMap | Scalar} YamlNode
+	 * @import {YAMLSeq, Scalar, YAMLMap, Alias, Node} from 'yaml'
+	 *
+	 * @template [T=unknown]
+	 * @typedef {Exclude<Node<T>, Alias>} _YAMLNode
+	 * @typedef {_YAMLNode<T> & Required<Pick<_YAMLNode<T>, 'srcToken'>>} YamlNode
 	 * */
 
 	/**
-	 *  @type {ProxyHandler<YamlNode>}
+	 * @template T
+	 * @param {YamlNode<T>} node
+	 * @return {node is YAMLSeq}
+	 * */
+	function isYamlSequence(node) {
+		return node.srcToken.type === 'block-seq';
+	}
+
+	/**
+	 * @template T
+	 * @param {YamlNode<T>} node
+	 * @return {node is YAMLMap<string, T>}
+	 * */
+	function isYamlMap(node) {
+		return node.srcToken.type === 'block-map';
+	}
+
+	/**
+	 * @template T
+	 * @type {ProxyHandler<YamlNode<T>>}
 	 *  */
 	const handler = {
 		get: getter,
 		set: setter,
 		has: (target, prop) => {
-			if (target.type === 'SEQ') {
+			if (isYamlSequence(target)) {
 				return Reflect.has(target.items, prop);
 			}
 			return Reflect.has(target, prop);
 		},
 	};
 	/**
-	 * @template {YamlNode} T
+	 * @template Node
+	 * @template {YamlNode<Node>} T
 	 * @param {T} target
 	 * @param {string | symbol} prop
 	 * */
 	function getter(target, prop) {
 		/**
-		 * @param {YamlNode} value
-		 * @returns {boolean}
+		 * @template  T
+		 * @param {YamlNode<T>} value
+		 * @returns {value is Scalar<string>}
 		 * */
 		function isString(value) {
 			return (
-				'type' in value &&
-				!!value.type &&
-				['QUOTE_DOUBLE', 'PLAIN'].includes(value.type)
+				'srcToken' in value &&
+				!!value.srcToken.type &&
+				['double-quoted-scalar', 'scalar'].includes(value.srcToken.type)
 			);
 		}
 
-		if (target.type === 'MAP') {
+		if (isYamlMap(target)) {
 			const value = target.get(prop);
 			if (typeof value !== 'object') return value;
-			return new Proxy(value, handler);
-		} else if (target.type === 'SEQ') {
+			return new Proxy(
+				/** @type {YamlNode<T>} */ (/** @type {unknown} */ (value)),
+				handler,
+			);
+		} else if (isYamlSequence(target)) {
 			const value = Reflect.get(target.items, prop);
 			if (['number', 'function'].includes(typeof value)) return value;
 			if (isString(value)) return value.value;
 			return new Proxy(value, handler);
 		} else {
 			throw new Error(
-				`Cannot get property ${String(prop)} of type ${target.type}`,
+				`Cannot get property ${String(prop)} of type ${target.srcToken.type}`,
 			);
 		}
 	}
 
 	/**
 	 * @template T
-	 * @param {YamlNode} target
+	 * @param {YamlNode<T>} target
 	 * @param {string} prop
 	 * @param {T} value
 	 * @returns {boolean}
 	 * */
 	function setter(target, prop, value) {
-		if (target.type === 'MAP') {
+		if (isYamlMap(target)) {
 			target.set(prop, value);
-		} else if (target.type === 'SEQ') {
+		} else if (isYamlSequence(target)) {
 			Reflect.set(target.items, prop, value);
 		} else {
 			throw new Error(
-				`Cannot set property ${String(prop)} of type ${target.type}`,
+				`Cannot set property ${String(prop)} of type ${target.srcToken.type}`,
 			);
 		}
 		return true;
@@ -142,14 +169,15 @@ function updateYamlFile(filePath, callback) {
 
 	const document = yaml.parseDocument(readFile(filePath), {
 		version: '1.2',
+		keepSourceTokens: true,
 	});
 	if (!document.contents) {
 		throw new Error('YAML document is empty');
 	}
 
 	const content = new Proxy(
-		document.contents,
-		/** @type {ProxyHandler<YamlNode>} */ handler,
+		/** @type {YamlNode} */ (document.contents),
+		handler,
 	);
 
 	callback(/** @type {T} */ (content));

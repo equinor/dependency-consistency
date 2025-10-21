@@ -14,7 +14,7 @@
     - pip-requirements-js@0.2.1
     - semver-sort@1.0.0
     - smol-toml@1.4.2
-    - yaml@1.10.2
+    - yaml@2.8.1
   stages:
     - pre-commit
     - manual
