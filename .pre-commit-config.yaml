@@ -30,7 +30,7 @@ repos:
       - id: consistent-dependencies
         name: Keep these dependencies consistent
         language: node
-        entry: node index.cjs
+        entry: node src/index.cjs
         language_version: 24.6.0
         pass_filenames: false
         files: ^(.pre-commit-config.yaml|package-lock.json)$

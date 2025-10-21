@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // @ts-check
 
-const {parseVersion, updateYamlFile} = require('../shared.cjs');
+const {parseVersion, updateYamlFile} = require('../src/shared.cjs');
 
-/** @import {ChangeYaml, Hook} from '../types' */
+/** @import {ChangeYaml, Hook} from '../src/types' */
 
 /**
  * @typedef Dependency
