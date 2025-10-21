@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 // @ts-check
 
-const {readFile, updateYamlFile} = require('../shared.cjs');
+const {readFile, updateYamlFile} = require('../src/shared.cjs');
 
-/** @import {PreCommit, Hook, ChangeYaml} from '../types' */
+/** @import {PreCommit, Hook, ChangeYaml} from '../src/types' */
 
 function main() {
 	const reference = readFile('.tool-versions');
