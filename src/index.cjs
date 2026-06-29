@@ -7,6 +7,7 @@ const toml = require('smol-toml');
 const requirements = require('pip-requirements-js');
 const semverSort = require('semver-sort');
 const sqlite = require('node:sqlite');
+const exec = require('node:child_process');
 
 const {
 	readFile,
@@ -306,13 +307,15 @@ function getDependencies(lockFiles) {
 	return dependencies;
 }
 
+/** @typedef {(repo: Repo, hook: Hook) => SupportedLanguages | null} GetHookLanguage */
+
 /**
  * @param {sqlite.DatabaseSync} db
  *  @param {Repo} repo The repository for these hooks
  *  @param {Hook} hook The specific hook we are evaluating
  *  @returns {SupportedLanguages | null}
  *  */
-function getHookLanguage(db, repo, hook) {
+function getHookLanguageFromPreCommit(db, repo, hook) {
 	if (repo.repo === 'local') {
 		return hook.language ?? null;
 	}
@@ -370,18 +373,21 @@ function pinVersionInDependency(name, version, language) {
 }
 
 /**
- * @param {sqlite.DatabaseSync} db
  * @param {Dependencies} dependencies
- * @param {string} preCommitFile
+ * @param {PreCommit} preCommit
+ * @param {PreCommitFile} preCommitFile
+ * @param {GetHookLanguage} getHookLanguageRepository
  * @returns {void}
  */
-function updateDependencies(db, dependencies, preCommitFile) {
-	/** @type {PreCommit} */
-	const preCommit = YAML.parse(readFile(preCommitFile));
-
+function updateDependencies(
+	dependencies,
+	preCommit,
+	preCommitFile,
+	getHookLanguageRepository,
+) {
 	preCommit.repos.forEach(repo => {
 		repo.hooks.forEach(hook => {
-			const hookLanguage = getHookLanguage(db, repo, hook);
+			const hookLanguage = getHookLanguageRepository(repo, hook);
 			if (
 				hookLanguage === null ||
 				!SUPPORTED_LANGUAGES.includes(hookLanguage)
@@ -427,18 +433,52 @@ function updateDependencies(db, dependencies, preCommitFile) {
 				let content = readFile(preCommitFile);
 				Object.keys(mapping).forEach(previousVersion => {
 					const newVersion = mapping[previousVersion];
-					content = content.replace(
-						new RegExp(
-							`( +- *["']?)${escapeRegex(previousVersion)}(["'])?( *#.*)?(\n)`,
-							'gi',
-						),
-						`$1${newVersion}$2$3$4`,
-					);
+					switch (preCommitFile) {
+						case '.pre-commit-config.yaml':
+							content = content.replace(
+								new RegExp(
+									`( +- *["']?)${escapeRegex(previousVersion)}(["'])?( *#.*)?(\n)`,
+									'gi',
+								),
+								`$1${newVersion}$2$3$4`,
+							);
+							break;
+						case 'prek.toml':
+							content = content.replace(
+								new RegExp(
+									`( *["'])${escapeRegex(previousVersion)}(["'] *,?)( *#.*)?(\n)?`,
+									'gi',
+								),
+								`$1${newVersion}$2$3$4`,
+							);
+							break;
+						default:
+							throw new Error(
+								`Unsupported pre-commit configuration file: ${preCommitFile}`,
+							);
+					}
 				});
 				fs.writeFileSync(preCommitFile, content);
 			}
 		});
 	});
+}
+
+/** @typedef {'.pre-commit-config.yaml' | 'prek.toml'} PreCommitFile */
+/**
+ * @returns {PreCommitFile}
+ */
+function getPreCommitFile() {
+	/** @type {PreCommitFile} */
+	let preCommitFile = '.pre-commit-config.yaml';
+	if (fs.existsSync(preCommitFile)) {
+		return preCommitFile;
+	}
+	preCommitFile = 'prek.toml';
+	if (fs.existsSync(preCommitFile)) {
+		return preCommitFile;
+	}
+	throw new Error('No pre-commit configuration file found');
 }
 
 /**
@@ -448,18 +488,76 @@ function main() {
 	if (process.argv.length < 3) {
 		throw new Error('At least one lock file must be given');
 	}
-	const PRE_COMMIT_YAML = '.pre-commit-config.yaml';
+
+	const preCommitFile = getPreCommitFile();
 
 	const LOCK_FILES = process.argv.slice(2);
 
 	const dependencies = getDependencies(LOCK_FILES);
 
-	/** @type {sqlite.DatabaseSync} */
-	const db = new sqlite.DatabaseSync(
-		`${process.env.HOME}/.cache/pre-commit/db.db`,
-	);
+	/** @type {PreCommit} */
+	let preCommit;
 
-	updateDependencies(db, dependencies, PRE_COMMIT_YAML);
+	/** @type {GetHookLanguage} */
+	let getHookLanguage;
+
+	switch (preCommitFile) {
+		case '.pre-commit-config.yaml': {
+			preCommit = YAML.parse(readFile(preCommitFile));
+			/** @type {sqlite.DatabaseSync} */
+			const db = new sqlite.DatabaseSync(
+				`${process.env.HOME}/.cache/pre-commit/db.db`,
+			);
+			getHookLanguage = (repo, hook) =>
+				getHookLanguageFromPreCommit(db, repo, hook);
+			break;
+		}
+		case 'prek.toml': {
+			try {
+				exec.execSync('prek --version', {
+					stdio: 'ignore',
+				});
+			} catch {
+				throw new Error("Could not find the 'prek' binary");
+			}
+
+			preCommit = /** @type {PreCommit} */ (
+				/** @type {unknown} */ (toml.parse(readFile(preCommitFile)))
+			);
+
+			/**
+			 * @typedef PrekConfigurationItem
+			 * @property {string} id
+			 * @property {string} full_id
+			 * @property {string} alias
+			 * @property {SupportedLanguages} language
+			 * @property {string} description
+			 * @property {string[]} stages
+			 * */
+			/** @type {PrekConfigurationItem[]} */
+			const prekConfiguration = JSON.parse(
+				exec.execSync('prek list --output-format json', {encoding: 'utf-8'}),
+			);
+			/** @type {GetHookLanguage} */
+			getHookLanguage = (repo, hook) => {
+				if (hook.language) return hook.language;
+				for (const conf of prekConfiguration) {
+					if (conf.id === hook.id) return conf.language;
+				}
+				console.error(
+					`Could not find language for hook ${hook.id} in prek configuration`,
+				);
+				return null;
+			};
+			break;
+		}
+		default:
+			throw new Error(
+				`Unsupported pre-commit configuration file: ${preCommitFile}`,
+			);
+	}
+
+	updateDependencies(dependencies, preCommit, preCommitFile, getHookLanguage);
 }
 
 main();
