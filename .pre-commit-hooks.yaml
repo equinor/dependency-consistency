@@ -19,4 +19,4 @@
     - pre-commit
     - manual
     - pre-push
-  files: ^(.pre-commit-config.yaml|.*/(yarn.lock|package-lock.json))$
+  files: ^(.pre-commit-config.yaml|prek.toml|.*/(yarn.lock|package-lock.json))$
