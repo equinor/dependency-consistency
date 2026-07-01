@@ -52,7 +52,6 @@ function escapeRegex(string) {
 	/** @type {function(string): string} */
 	let _escape;
 	if ('escape' in RegExp && typeof RegExp.escape === 'function') {
-		// @ts-expect-error TypeScript is not aware of the new escape function
 		({escape: _escape} = RegExp);
 	} else {
 		_escape = string => string.replace(/\[/g, '\\[').replace(/]/g, '\\]');
