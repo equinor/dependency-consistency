@@ -12,7 +12,7 @@
 		"@yarnpkg/lockfile": "^1.1.0",
 		"pip-requirements-js": "^1.0.3",
 		"semver-sort": "^1.0.0",
-		"smol-toml": "^1.6.1",
+		"smol-toml": "^1.7.0",
 		"yaml": "^2.9.0"
 	},
 	"devDependencies": {
