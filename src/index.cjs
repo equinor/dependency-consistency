@@ -380,7 +380,7 @@ function updateDependencies(db, dependencies, preCommitFile) {
 	const preCommit = YAML.parse(readFile(preCommitFile));
 
 	preCommit.repos.forEach(repo => {
-		repo.hooks.forEach(async hook => {
+		repo.hooks.forEach(hook => {
 			const hookLanguage = getHookLanguage(db, repo, hook);
 			if (
 				hookLanguage === null ||
