@@ -15,7 +15,7 @@ It supports both [`pre-commit`](https://pre-commit.com)'s `.pre-commit-config.ya
 ```yaml
 
   - repo: https://github.com/equinor/dependency-consistency
-    rev: v3.1.0
+    rev: v3.2.0
     hooks:
       - id: consistent-dependencies
         args:
@@ -28,6 +28,6 @@ It supports both [`pre-commit`](https://pre-commit.com)'s `.pre-commit-config.ya
 ```toml
 [[repos]]
 repo = "https://github.com/equinor/dependency-consistency"
-rev = "v3.1.0"
+rev = "v3.2.0"
 hooks = [{id = "consistent-dependencies", args = ["<path to lock file>"]}]
 ```
